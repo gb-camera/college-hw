@@ -1,0 +1,7 @@
+Name                      Scores            (Low)  Total  Average  Grade
+------------------------  ----------------  -----  -----  -------  -----
+Fred Flintstone             70  82  55  80  ( 55)    232    77.33    C
+Barney Rubble               65  62   0  71  (  0)    198    66.00    D
+Yogi Bear                   89  92 100  95  ( 89)    287    95.67    A
+Secret Squirrel             75  77  83  81  ( 75)    241    80.33    B
+Dick Dastardly              59   0  37   0  (  0)     96    32.00    F

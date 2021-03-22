@@ -1,0 +1,10 @@
+Name                      Scores            (Low)  Total  Average  Grade
+------------------------  ----------------  -----  -----  -------  -----
+Luke Skywalker              88  97  87  84  ( 84)    272    90.67    A
+Leia Organa                 94 100  88  83  ( 83)    282    94.00    A
+Han Solo                    87  69  18  83  ( 18)    239    79.67    C
+Threepio                   100 100 100  99  ( 99)    300   100.00    A
+Artoo                      100 100  99 100  ( 99)    300   100.00    A
+Darth Vader                 95  27  89  67  ( 27)    251    83.67    B
+Ben Kenobi                  98  93  96  97  ( 93)    291    97.00    A
+Jar-Jar Binks               37  50   3   0  (  0)     90    30.00    F

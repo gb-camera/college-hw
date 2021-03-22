@@ -1,0 +1,177 @@
+//Implementation of sequence4.template
+//Michael Dinh - CISP 430 - Assignment 3 - Huang (Spring 2020)
+
+#include <cassert>
+#include <cstdlib>
+using namespace CISP430_A3;
+
+//Default constructor
+template <class Item>
+sequence<Item>::sequence(){
+	//All the pointers should be null because there isn't a list yet
+	cursor = precursor = head_ptr = tail_ptr = NULL;
+	many_nodes = 0;
+}
+
+//Sequence constructor
+template <class Item>
+sequence<Item>::sequence(const sequence &source){
+	//If there isn't a current item in the sequence...
+	if(source.is_item() == false){ 
+		//..copy the list, and set the precursor and cursor as null
+		list_copy(source.head_ptr, head_ptr, tail_ptr);
+		precursor = cursor = NULL;
+	}
+	//If the cursor is at the start of the list...
+	else if(source.cursor == source.head_ptr){
+		//...copy the list, set the precursor to null, and set the cursor to the head_ptr
+		list_copy(source.head_ptr, head_ptr, tail_ptr);
+		precursor = NULL;
+		cursor = head_ptr;
+	}
+	//If the cursor is at any other position of the sequence...
+	else{
+		//Copy the list and step/iterate through the source/new copy
+		list_copy(source.head_ptr, head_ptr, tail_ptr); //Sequence copy
+		node<Item>* temp = source.head_ptr; //Iterator pointer to step through list
+		this->start(); //Reset cursors
+		while(temp != source.cursor){ //While the iterator is not at the source cursor...
+			//...advance both to their next node
+			temp = temp->link();
+			this->advance();
+		}
+	}
+	//Finally, copy the node count
+	many_nodes = source.many_nodes;
+}
+
+//Destructor
+template <class Item>
+sequence<Item>::~sequence(){
+	//We can just use the toolkit function here
+	list_clear(head_ptr);
+}
+
+template <class Item>
+void sequence<Item>::start(){
+	//Point the cursor to the start of the list
+	cursor = head_ptr;
+	//Set the precursor to null since cursor is at the start
+	precursor = NULL;
+}
+
+template <class Item>
+void sequence<Item>::advance(){
+	//First check if is_item returns true
+	if(is_item()){
+		//Advance to the next node in the list
+		precursor = cursor;
+		cursor = cursor->link();
+	}
+	//Otherwise we're either at the end of the list, or the list is not active
+	else if(cursor == NULL || cursor == tail_ptr){
+		//In this case, set it so that there is no active item
+		precursor = cursor = NULL;
+	}
+}
+
+template <class Item>
+void sequence<Item>::insert(const value_type &entry){
+	if(head_ptr == NULL){ //If the list is empty...
+		list_head_insert(head_ptr, entry); //...insert at the head to create the list
+		tail_ptr = head_ptr; //There's only one item in the list, so that item is first and last
+		cursor = head_ptr; //The new node is set as the active node
+		precursor = NULL; //No other items exist within the list at this time
+	}
+	else if(!is_item() || cursor == head_ptr){ //If the list is not active, or at the start...
+		list_head_insert(head_ptr, entry); //...insert at the beginning
+		cursor = head_ptr;
+		precursor = NULL;
+	}
+	else{ //Otherwise is_item() returns true, so...
+		list_insert(precursor, entry); //Do a standard insert
+		cursor = precursor->link();
+	}
+	many_nodes++; //Finally, update the node count
+}
+
+template <class Item>
+void sequence<Item>::attach(const value_type &entry){
+	if(head_ptr == NULL){ //If the list is empty...
+		list_head_insert(head_ptr, entry); //...same as last time, insert at the head to create the list
+		tail_ptr = head_ptr;
+		cursor = head_ptr;
+		precursor = NULL;
+	}
+	else if(!is_item() || cursor == tail_ptr){ //If the list is not active, or at the end...
+		//We attach the new item to the end of the list
+		precursor = tail_ptr; //The old tail is now the previous item
+		list_insert(tail_ptr, entry);
+		tail_ptr = tail_ptr->link(); //Update the list's tail
+		cursor = tail_ptr;
+	}
+	else{ //Otherwise is_item() returns true, so...
+		list_insert(cursor, entry); //Attach into the list, after the current node
+		precursor = cursor;
+		cursor = cursor->link();
+	}
+	many_nodes++; //Finally, update the node count
+}
+
+template <class Item>
+void sequence<Item>::operator =(const sequence &source){
+	if(this == &source){
+		return; //Self-assignment check
+	}
+	if(!source.is_item()){ //If no active item in sequence...
+		//...copy the list and set precursor / cursor to null
+		list_copy(source.head_ptr, head_ptr, tail_ptr);
+		precursor = cursor = NULL;
+	}
+	else if(source.cursor == source.head_ptr){ //If the cursor is at the start of the list...
+		//...copy the list, set precursor to null, and set cursor to head_ptr
+		list_copy(source.head_ptr, head_ptr, tail_ptr);
+		precursor = NULL;
+		cursor = head_ptr;
+	}
+	//If the cursor is at any other position of the sequence...
+	else{
+		//Copy the list and step/iterate through the source/new copy
+		list_copy(source.head_ptr, head_ptr, tail_ptr); //Sequence copy
+		node<Item>* temp = source.head_ptr; //Iterator pointer to step through list
+		this->start(); //Reset cursors
+		while(temp != source.cursor){ //While the iterator is not at the source cursor...
+			//...advance both to their next node
+			temp = temp->link();
+			this->advance();
+		}
+	}
+	many_nodes = source.many_nodes; //Copy the node count
+}
+
+template <class Item>
+void sequence<Item>::remove_current(){
+	//First check if is_item returns true
+	if(is_item()){
+		if(cursor == head_ptr){ //If the current item is the head...
+			precursor = NULL;
+			cursor = cursor->link();
+			list_head_remove(head_ptr); //...we can use the head removal function
+		}
+		else{
+			//Standard removal
+			cursor = cursor->link();
+			list_remove(precursor);
+		}
+		many_nodes--; //Decrement node count
+	}
+	//Nothing should occur if is_item is false
+}
+
+template <class Item>
+Item sequence<Item>::current() const{
+	//is_item must be true
+	assert(is_item());
+	//If there is an item, return its' data member
+	return cursor->data();
+}

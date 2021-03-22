@@ -1,0 +1,188 @@
+//table2.template
+//Michael Dinh - CISP 430 - Assignment 6 - Huang (Spring 2020)
+//Template implementation for the chained hash table class
+
+#include "table2.h"
+using namespace std;
+
+//Constructor
+template <class RecordType>
+table<RecordType>::table() {
+    //Need to make an empty table
+    total_records = 0;
+    //Initialize the table and have each head pointer start off null
+    for (int i = 0; i < TABLE_SIZE; ++i) { data[i] = NULL; }
+}
+
+//Copy constructor
+template <class RecordType>
+table<RecordType>::table(const table& source) {
+    //We can use the toolkit function list_copy for this; first make a dummy tail
+    Node<RecordType>* copyTail;
+    //Initialize the table and copy all values
+    for (int i = 0; i < TABLE_SIZE; ++i) {
+        list_copy(source.data[i], data[i], copyTail);
+    }
+    //Assign source total_records to this object's total_records
+    this->total_records = source.total_records;
+}
+
+//Destructor
+template <class RecordType>
+table<RecordType>::~table() {
+    //We can again use a toolkit function for this
+    for (int i = 0; i < TABLE_SIZE; ++i) { list_clear(data[i]); }
+}
+
+//insert
+template <class RecordType>
+void table<RecordType>::insert(const RecordType& entry) {
+    //Check for duplication
+    if (is_present(entry.key)) { return; }
+    //Make an iterator for the associated chain, set it to the head
+    Node<RecordType>* iter = data[hash(entry.key)];
+    if (iter == NULL) { //If the chain is empty
+        //Make a new head and set all values
+        data[hash(entry.key)] = new Node<RecordType>;
+        data[hash(entry.key)]->data = entry;
+        data[hash(entry.key)]->link = NULL;
+    }
+    else { //If the chain is full
+        //Get to the tail
+        while (iter->link != NULL && iter->data.key != entry.key) {
+            iter = iter->link;
+        }
+        //Now that we're at the element before the tail, we can insert
+        iter->link = new Node<RecordType>;
+        iter = iter->link;
+        iter->link = NULL;
+        iter->data = entry;
+    }
+    ++total_records;
+}
+
+//remove
+template <class RecordType>
+void table<RecordType>::remove(int key) {
+    //Create an initial iterator
+    Node<RecordType>* iter = data[hash(key)];
+    //Check if the head is the match
+    if (iter->data.key == key) {
+        list_head_remove(iter);
+        --total_records;
+        return;
+    }
+    //Otherwise our value is potentially somewhere else
+    //Make a second iterator; we need one before the current iterator due to the design of the toolkit function
+    Node<RecordType> *beforeIter = NULL;
+    bool found = false;
+    while (iter != NULL) { //While we haven't hit the tail of the chain...
+        //Initial branch to check
+        if (iter->data.key == key) {
+            //Match found, prepare for deletion
+            found = true;
+            break;
+        }
+        //Advance the iterator otherwise
+        beforeIter = iter;
+        iter = iter->link;
+    }
+    //If we have a match, delete
+    if (found) {
+        //Use toolkit function
+        list_remove(beforeIter);
+        --total_records;
+    }
+}
+
+//print
+template <class RecordType>
+void table<RecordType>::print(int index) const {
+    //Make a node to iterate through the specified chain
+    Node<RecordType>* iter = data[index];
+    //Print the header
+    cout << "[( " << index << " )]-----> ";
+    //Traverse nodes through loop and print each key
+    while (iter != NULL) {
+        cout << "[" << iter->data.key << "]--->";
+        iter = iter->link;
+    }
+    cout << " NULL" << endl; //Print the tail
+}
+
+
+//clear
+template <class RecordType>
+void table<RecordType>::clear() {
+    //Similar to destructor, simply clears the table
+    for (int i = 0; i < TABLE_SIZE; ++i) { list_clear(data[i]); }
+    total_records = 0;
+}
+
+//find
+template <class RecordType>
+void table<RecordType>::find(int key, bool& found, RecordType& result) const {
+    //Specifications:
+    //If record found: found = true, result = record w/key
+    //If no match: found = false, result = garbage data
+    //Implementation similar to remove function, except no data to remove
+    //----------------------------------------------------
+    //Make a node to iterate through the associated chain
+    cout << "Key to check: " << key << endl;
+    cout << "Branch checked: " << hash(key) << endl;
+    Node<RecordType>* iter = data[hash(key)];
+    found = false;
+    while (iter != NULL) { //While we haven't hit the tail of the chain...
+        if (iter->data.key == key) {
+            //Match found
+            cout << "Found; returning" << endl;
+            found = true;
+            result = iter->data;
+            break;
+        }
+        //Otherwise, keep going
+        iter = iter->link;
+        cout << "Advancing" << endl;
+    }
+}
+
+//is_present
+template <class RecordType>
+bool table<RecordType>::is_present(int key) const {
+    //Similar implementation to the find function but no data return necessary
+    //Make a node to iterate through the associated chain
+    Node<RecordType>* iter = data[hash(key)];
+    bool found = false;
+    while (iter != NULL) { //While we haven't hit the tail of the chain...
+        if (iter->data.key == key) {
+            //Match found
+            found = true;
+            break;
+        }
+        //Otherwise, keep going
+        iter = iter->link;
+    }
+    return found;
+}
+
+//hash
+template <class RecordType>
+size_t table<RecordType>::hash(int key) const {
+    //A simple division hashing function will suffice
+    return key % TABLE_SIZE;
+}
+
+//Overloaded operator =
+template <class RecordType>
+void table<RecordType>::operator =(const table& source) {
+    //Self-assignment checl
+    if (this == &source) { return; }
+    //Clear the original object
+    for (int i = 0; i < TABLE_SIZE; ++i) { list_clear(data[i]); } //Possible bug
+    //Make a dummy tail for the toolkit copy
+    Node<RecordType>* copyTail;
+    //Initialize the table and copy all values
+    for (int i = 0; i < TABLE_SIZE; ++i) { list_copy(source.data[i], data[i], copyTail); }
+    //Copy over total_records
+    this->total_records = source.total_records;
+}
